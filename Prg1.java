@@ -1,6 +1,7 @@
+//Create GUI application using AWT & Applet classes
 import java.applet.*;
 import java.awt.*;
-public class extends applet{
+public class Test extends Applet{
     public void paint(Graphics g){
         Font f = new Font("Times New Roman", Font.BOLD, 40);
         g.setFont(f);

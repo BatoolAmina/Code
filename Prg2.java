@@ -1,92 +1,129 @@
-// Servlet program for cookies
-// index.html
+//Design & develop the client-server application using NET package.
 
-/*
- * <form action="servlet1" method="post">
- * Name:<input type="text" name="userName"/><br/>
- * <input type="submit" value="go"/>
- * </form>
- */
-
-//FirstServlet.java
+// A Java program for a Client
 import java.io.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
-
-public class FirstServlet extends HttpServlet {
-
-    public void doPost(HttpServletRequest request, HttpServletResponse response) {
+import java.net.*;
+ 
+public class Client {
+    // initialize socket and input output streams
+    private Socket socket = null;
+    private DataInputStream input = null;
+    private DataOutputStream out = null;
+ 
+    // constructor to put ip address and port
+    public Client(String address, int port)
+    {
+        // establish a connection
         try {
-
-            response.setContentType("text/html");
-            PrintWriter out = response.getWriter();
-
-            String n = request.getParameter("userName");
-            out.print("Welcome " + n);
-
-            Cookie ck = new Cookie("uname", n);// creating cookie object
-            response.addCookie(ck);// adding cookie in the response
-
-            // creating submit button
-            out.print("<form action='servlet2'>");
-            out.print("<input type='submit' value='go'>");
-            out.print("</form>");
-
-            out.close();
-
-        } catch (Exception e) {
-            System.out.println(e);
+            socket = new Socket(address, port);
+            System.out.println("Connected");
+ 
+            // takes input from terminal
+            input = new DataInputStream(System.in);
+ 
+            // sends output to the socket
+            out = new DataOutputStream(
+                socket.getOutputStream());
         }
+        catch (UnknownHostException u) {
+            System.out.println(u);
+            return;
+        }
+        catch (IOException i) {
+            System.out.println(i);
+            return;
+        }
+ 
+        // string to read message from input
+        String line = "";
+ 
+        // keep reading until "Over" is input
+        while (!line.equals("Over")) {
+            try {
+                line = input.readLine();
+                out.writeUTF(line);
+            }
+            catch (IOException i) {
+                System.out.println(i);
+            }
+        }
+ 
+        // close the connection
+        try {
+            input.close();
+            out.close();
+            socket.close();
+        }
+        catch (IOException i) {
+            System.out.println(i);
+        }
+    }
+ 
+    public static void main(String args[])
+    {
+        Client client = new Client("127.0.0.1", 5000);
     }
 }
 
-// SecondServlet.java
-
+// A Java program for a Server
+import java.net.*;
 import java.io.*;
-import javax.servlet.*;
-import javax.servlet.http.*;
 
-public class SecondServlet extends HttpServlet {
+public class Server
+{
+	//initialize socket and input stream
+	private Socket		 socket = null;
+	private ServerSocket server = null;
+	private DataInputStream in	 = null;
 
-    public void doPost(HttpServletRequest request, HttpServletResponse response) {
-        try {
+	// constructor with port
+	public Server(int port)
+	{
+		// starts server and waits for a connection
+		try
+		{
+			server = new ServerSocket(port);
+			System.out.println("Server started");
 
-            response.setContentType("text/html");
-            PrintWriter out = response.getWriter();
+			System.out.println("Waiting for a client ...");
 
-            Cookie ck[] = request.getCookies();
-            out.print("Hello " + ck[0].getValue());
+			socket = server.accept();
+			System.out.println("Client accepted");
 
-            out.close();
+			// takes input from the client socket
+			in = new DataInputStream(
+				new BufferedInputStream(socket.getInputStream()));
 
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
+			String line = "";
 
+			// reads message from client until "Over" is sent
+			while (!line.equals("Over"))
+			{
+				try
+				{
+					line = in.readUTF();
+					System.out.println(line);
+
+				}
+				catch(IOException i)
+				{
+					System.out.println(i);
+				}
+			}
+			System.out.println("Closing connection");
+
+			// close connection
+			socket.close();
+			in.close();
+		}
+		catch(IOException i)
+		{
+			System.out.println(i);
+		}
+	}
+
+	public static void main(String args[])
+	{
+		Server server = new Server(5000);
+	}
 }
-
-// web.xml
-<web-app>  
-  
-<servlet>  
-<servlet-name>s1</servlet-name>  
-<servlet-class>FirstServlet</servlet-class>  
-</servlet>  
-  
-<servlet-mapping>  
-<servlet-name>s1</servlet-name>  
-<url-pattern>/servlet1</url-pattern>  
-</servlet-mapping>  
-  
-<servlet>  
-<servlet-name>s2</servlet-name>  
-<servlet-class>SecondServlet</servlet-class>  
-</servlet>  
-  
-<servlet-mapping>  
-<servlet-name>s2</servlet-name>  
-<url-pattern>/servlet2</url-pattern>  
-</servlet-mapping>  
-  
-</web-app>  
